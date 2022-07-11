@@ -1,5 +1,5 @@
 {
-  "name": "wxcloudrun-koa",
+  "name": "wxcloudrun-dcsf",
   "version": "1.0.0",
   "description": "微信云托管 koa 框架模板",
   "main": "index.js",
