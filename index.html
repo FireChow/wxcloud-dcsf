@@ -29,7 +29,7 @@
         // signature: window.location.href       // 选填，如果需要微信 SDK 的API方法，则填写要使用的地址，会返回 signature 签名对象，envid参数不填则无效
         // region: ''                         // 选填，环境的地域，可选ap-guangzhou、ap-beijing，不填默认为ap-shanghai
         // traceUser:false                    // 选填，默认true，是否在将用户访问记录到用户管理中，非上海地域请设置成false
-        // noback: true                       // 选填，默认noback:false，此时初次跳转授权后，模块将重新回退加载页面。
+        noback: true                       // 选填，默认noback:false，此时初次跳转授权后，模块将重新回退加载页面。
       })
       console.log(result)
       if (result.ret === 0) {
