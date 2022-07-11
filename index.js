@@ -20,13 +20,11 @@ router.get("/MP_verify_4PHUAKsyG7gnjDcD.txt", async (ctx) => {
   ctx.body = txtPage;
 });
 
-// 更新计数
 router.post("/api/user", async (ctx) => {
   const { request } = ctx;
   const { user } = request.body;
-  console.log('user:::::', user)
   if (ctx.request.headers["x-wx-source"]) {
-    user.openid = ctx.request.headers["x-wx-openid"] || 'testopenid'
+    user.openid = ctx.request.headers["x-wx-openid"]
   }
   let newUser = User.build(user)
   let result = await newUser.save()
@@ -37,7 +35,6 @@ router.post("/api/user", async (ctx) => {
   };
 });
 
-// 获取计数
 router.get("/api/user/:openid", async (ctx) => {
   const { openid } = ctx.params;
   let user = await User.findOne({ where: { openid } })
