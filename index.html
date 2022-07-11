@@ -49,7 +49,15 @@
       }
     }
     function submitRegister() {
-      $('#js_btn').onClick(() => {
+      $('#js_btn').click(async () => {
+        let user = {
+          name: $("#name").val(),
+          id_tems: $("#id_tems").val(),
+          email: $("#email").val(),
+          phone: $("#phone").val(),
+          referee: $("#referee").val()
+        }
+        console.log(user)
         const callres = await c1.callContainer({
           config: {
             env: 'prod-1gyjb4if1998d9b4', // 微信云托管的环境ID
@@ -61,11 +69,7 @@
             "content-type": "application/json"
           },
           data: {
-            name: $("#name").val(),
-            id_tems: $("#id_tems").val(),
-            email: $("#email").val(),
-            phone: $("#phone").val(),
-            referee: $("#referee").val()
+            user
           }
           // 其余参数同 wx.request
         })
@@ -134,10 +138,11 @@
     </div>
     <div class="page gallery js_show pay" tabindex="-1">
       <div class="page__hd">
-        <h1 class="page__title">扫码进行支付</h1>
+        <h1 class="page__title" style="text-align: center;">扫码进行支付</h1>
       </div>
       <div>
-        <img src="https://7072-prod-1g3ezreeff916953-1311324132.tcb.qcloud.la/WechatIMG15.jpeg?sign=66a4f38ea24f5e7e5aa3c53b7a3d605f&t=1654327290" />
+        <img style="width: 100%;"
+          src="https://7072-prod-1g3ezreeff916953-1311324132.tcb.qcloud.la/WechatIMG15.jpeg?sign=66a4f38ea24f5e7e5aa3c53b7a3d605f&t=1654327290" />
       </div>
     </div>
   </div>

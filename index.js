@@ -24,8 +24,9 @@ router.get("/MP_verify_4PHUAKsyG7gnjDcD.txt", async (ctx) => {
 router.post("/api/user", async (ctx) => {
   const { request } = ctx;
   const { user } = request.body;
+  console.log('user:::::', user)
   if (ctx.request.headers["x-wx-source"]) {
-    user.openid = ctx.request.headers["x-wx-openid"]
+    user.openid = ctx.request.headers["x-wx-openid"] || 'testopenid'
   }
   let newUser = User.build(user)
   let result = await newUser.save()
