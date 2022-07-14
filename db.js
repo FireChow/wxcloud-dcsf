@@ -42,6 +42,10 @@ const User = sequelize.define("User", {
   referee: {
     type: DataTypes.STRING,
     allowNull: true
+  },
+  role: {
+    type: DataTypes.STRING,
+    allowNull: true
   }
 });
 

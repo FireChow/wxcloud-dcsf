@@ -5,6 +5,7 @@ const bodyParser = require("koa-bodyparser");
 const fs = require("fs");
 const path = require("path");
 const { init: initDB, User } = require("./db");
+const sequelize_1 = require("sequelize")
 
 const router = new Router();
 
@@ -38,6 +39,26 @@ router.post("/api/user", async (ctx) => {
 router.get("/api/user/:openid", async (ctx) => {
   const { openid } = ctx.params;
   let user = await User.findOne({ where: { openid } })
+  ctx.body = {
+    code: 200,
+    data: user
+  };
+});
+
+router.get("/api/user/search/:text", async (ctx) => {
+  let openid = ''
+  if (ctx.request.headers["x-wx-source"]) {
+    openid = ctx.request.headers["x-wx-openid"]
+  }
+  let currentUser = await User.findOne({ where: { openid } })
+  if (currentUser.role !== 'admin') throw new Error('没有权限')
+  const { text } = ctx.params;
+  let user = await User.findOne({ where: {
+    [sequelize_1.Op.or]: [
+      { name: { [sequelize_1.Op.like]: `%${text}%` } },
+      { phone: { [sequelize_1.Op.like]: `%${text}%` } }
+    ]
+  } })
   ctx.body = {
     code: 200,
     data: user
