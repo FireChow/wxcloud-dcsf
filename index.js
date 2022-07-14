@@ -45,7 +45,7 @@ router.get("/api/user/:openid", async (ctx) => {
   };
 });
 
-router.get("/api/user/search/:text", async (ctx) => {
+router.get("/api/userSearch/:text", async (ctx) => {
   let openid = ''
   if (ctx.request.headers["x-wx-source"]) {
     openid = ctx.request.headers["x-wx-openid"]
