@@ -63,9 +63,13 @@
         function RegistSearch() {
             $('#searchConfirm').click(async () => {
                 $(".innerLoading").css("display", "block")
+                try {
                 const resUsers = await callServer(`userSearch/${$("#searchInput").val()}`)
+                } catch(e) {
+                    window.alert(e)
+                    return
+                }
                 if (resUsers && resUsers.length > 0) {
-                    // insert users
                     let htmlStr = ''
                     for (let user of resUsers) {
                         htmlStr += `<div role="option" class="weui-cell weui-cell_active weui-cell_access">
@@ -103,7 +107,7 @@
                 } else if (callres.data.code === 200) {
                     return callres.data.data
                 } else {
-                    window.alert(callres.errMsg)
+                    window.alert(callres.data.errMsg)
                 }
             } else {
                 window.alert(callres.errMsg)
@@ -137,28 +141,7 @@
                     <a href="javascript:" id="searchConfirm">搜索</a>
                     <a href="javascript:" class="weui-search-bar__cancel-btn">取消</a>
                 </div>
-                <div role="listbox" class="weui-cells searchbar-result" id="searchResult" style="display: none;">
-                    <div role="option" class="weui-cell weui-cell_active weui-cell_access">
-                        <div class="weui-cell__bd weui-cell_primary">
-                            <p>实时搜索文本</p>
-                        </div>
-                    </div>
-                    <div role="option" class="weui-cell weui-cell_active weui-cell_access">
-                        <div class="weui-cell__bd weui-cell_primary">
-                            <p>实时搜索文本</p>
-                        </div>
-                    </div>
-                    <div role="option" class="weui-cell weui-cell_active weui-cell_access">
-                        <div class="weui-cell__bd weui-cell_primary">
-                            <p>实时搜索文本</p>
-                        </div>
-                    </div>
-                    <div role="option" class="weui-cell weui-cell_active weui-cell_access">
-                        <div class="weui-cell__bd weui-cell_primary">
-                            <p>实时搜索文本</p>
-                        </div>
-                    </div>
-                </div>
+                <div role="listbox" class="weui-cells searchbar-result" id="searchResult"></div>
                 <div class="weui-cells searchbar-result" id="noData" style="display: none;text-align: center;">
                     <div>没有找到数据</div>
                 </div>

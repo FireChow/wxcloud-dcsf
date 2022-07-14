@@ -51,18 +51,26 @@ router.get("/api/userSearch/:text", async (ctx) => {
     openid = ctx.request.headers["x-wx-openid"]
   }
   let currentUser = await User.findOne({ where: { openid } })
-  if (currentUser.role !== 'admin') throw new Error('没有权限')
-  const { text } = ctx.params;
-  let user = await User.findOne({ where: {
-    [sequelize_1.Op.or]: [
-      { name: { [sequelize_1.Op.like]: `%${text}%` } },
-      { phone: { [sequelize_1.Op.like]: `%${text}%` } }
-    ]
-  }, attributes: { exclude: ['openid', 'role'] } })
-  ctx.body = {
-    code: 200,
-    data: user
-  };
+  if (currentUser.role !== 'admin') {
+    ctx.body = {
+      code: 401,
+      errMsg: '没有权限'
+    }
+  } else {
+    const { text } = ctx.params;
+    let user = await User.findAll({
+      where: {
+        [sequelize_1.Op.or]: [
+          { name: { [sequelize_1.Op.like]: `%${text}%` } },
+          { phone: { [sequelize_1.Op.like]: `%${text}%` } }
+        ]
+      }, attributes: { exclude: ['openid', 'role'] }
+    })
+    ctx.body = {
+      code: 200,
+      data: user
+    }
+  }
 });
 
 // 小程序调用，获取微信 Open ID
