@@ -58,7 +58,7 @@ router.get("/api/userSearch/:text", async (ctx) => {
       { name: { [sequelize_1.Op.like]: `%${text}%` } },
       { phone: { [sequelize_1.Op.like]: `%${text}%` } }
     ]
-  } })
+  }, attributes: { exclude: ['openid', 'role'] } })
   ctx.body = {
     code: 200,
     data: user
