@@ -45,10 +45,16 @@
       if (openid) {
         const user = await callServer(`user/${openid}`)
         if (user && user.id) {
+          if (user.role === 'admin' || user.role === 'finance') {
+            $("#finance").html(`<a href="/users.html">👉🏻 用户查询通道 👈🏻</a>`)
+          }
           $(".inputs").css("display", "none")
           $(".pay").css("display", "block")
           $(".loading").css("display", "none")
           $("#title").html('扫码支付')
+          setTimeout(() => {
+            window.alert('付款时务必备注填写的鉴定人信息和电话')
+          }, 500)
         } else {
           $(".inputs").css("display", "block")
           $(".pay").css("display", "none")
@@ -68,11 +74,37 @@
     function submitRegister() {
       $('#js_btn').click(async () => {
         let user = {
-          name: $("#name").val(),
-          id_tems: $("#id_tems").val(),
-          email: $("#email").val(),
-          phone: $("#phone").val(),
-          referee: $("#referee").val()
+          name: $("#name").val().trim(),
+          id_tems: $("#id_tems").val().trim(),
+          email: $("#email").val().trim(),
+          phone: $("#phone").val().trim(),
+          referee: $("#referee").val().trim()
+        }
+        if (!user.name) {
+          window.alert('请输入被鉴定对象信息')
+          return
+        }
+        if (!user.id_tems) {
+          window.alert('请输入鉴定项目')
+          return
+        }
+        if (!user.email) {
+          window.alert('请输入邮箱')
+          return
+        } else if (!/^\w+@\w+\.\w+$/.test(user.email)) {
+          window.alert('请输入正确的邮箱')
+          return
+        }
+        if (!user.phone) {
+          window.alert('请输入联系方式')
+          return
+        } else if (!/^1[3456789]\d{9}$/.test(user.phone)) {
+          window.alert('请输入正确的联系方式')
+          return
+        }
+        if (!user.referee) {
+          window.alert('请输入鉴定人')
+          return
         }
         $(".inputs").css("display", "none")
         $(".pay").css("display", "none")
@@ -83,6 +115,9 @@
           $(".pay").css("display", "block")
           $(".loading").css("display", "none")
           $("#title").html('扫码支付')
+          setTimeout(() => {
+            window.alert('注册成功, 付款时务必备注填写的鉴定人信息和电话')
+          }, 500)
         } else {
           $(".inputs").css("display", "block")
           $(".pay").css("display", "none")
@@ -113,7 +148,7 @@
         } else if (callres.data.code === 200) {
           return callres.data.data
         } else {
-          window.alert(callres.errMsg)
+          window.alert(callres.data.errMsg)
         }
       } else {
         window.alert(callres.errMsg)
@@ -184,6 +219,8 @@
       </div>
       <div style="text-align: center;">
         <h4 style="color: #F39753;">付款时务必备注填写的鉴定人信息和电话</h4>
+        <a href="/mine.html">忘记了鉴定信息？点这里查看</a>
+        <div id="finance" style="margin-top: 10px;"></div>
       </div>
     </div>
   </div>
