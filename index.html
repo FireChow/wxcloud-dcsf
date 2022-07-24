@@ -44,6 +44,11 @@
       const openid = await callServer('wx_openid')
       if (openid) {
         const user = await callServer(`user/${openid}`)
+        if (user.need_improve) {
+          window.alert('请完善个人信息')
+          window.location.href = './mine.html'
+          return
+        }
         if (user && user.id) {
           if (user.role === 'admin' || user.role === 'finance') {
             $("#finance").html(`<a href="/users.html">👉🏻 用户查询通道 👈🏻</a>`)
@@ -52,14 +57,18 @@
           $(".pay").css("display", "block")
           $(".loading").css("display", "none")
           $("#title").html('扫码支付')
+          $("#invoice").on('click', () => {
+            getInvoiceList()
+          })
           setTimeout(() => {
-            window.alert('付款时务必备注填写的鉴定人信息和电话')
+            window.alert('付款时务必备注填写的鉴定对象和电话')
           }, 500)
         } else {
           $(".inputs").css("display", "block")
           $(".pay").css("display", "none")
           $(".loading").css("display", "none")
           $("#title").html('欢迎注册')
+          registPicker()
           submitRegister()
         }
       } else {
@@ -67,6 +76,7 @@
         $(".pay").css("display", "none")
         $(".loading").css("display", "none")
         $("#title").html('欢迎注册')
+        registPicker()
         submitRegister()
       }
     }
@@ -115,8 +125,11 @@
           $(".pay").css("display", "block")
           $(".loading").css("display", "none")
           $("#title").html('扫码支付')
+          $("#invoice").on('click', () => {
+            getInvoiceList()
+          })
           setTimeout(() => {
-            window.alert('注册成功, 付款时务必备注填写的鉴定人信息和电话')
+            window.alert('注册成功, 付款时务必备注填写的鉴定对象和电话')
           }, 500)
         } else {
           $(".inputs").css("display", "block")
@@ -127,32 +140,140 @@
       })
     }
 
-    async function callServer(path, method = 'GET', data = {}) {
-      const callres = await window.app.callContainer({
-        config: {
-          env: 'prod-1gyjb4if1998d9b4', // 微信云托管的环境ID
-        },
-        path: `/api/${path}`, // 填入业务自定义路径和参数，根目录，就是 / 
-        method: method, // 按照自己的业务开发，选择对应的方法
-        header: {
-          'X-WX-SERVICE': 'koa-7zry', // xxx中填入服务名称（微信云托管 - 服务管理 - 服务列表 - 服务名称）
-          "content-type": "application/json"
-        },
-        data: data
-        // 其余参数同 wx.request
+    function registPicker() {
+      $("#id_items_cell").on('click', () => {
+        showPicker()
       })
-      console.log(callres)
-      if (callres.data) {
-        if (!callres.data.code) {
-          return callres.data
-        } else if (callres.data.code === 200) {
-          return callres.data.data
-        } else {
-          window.alert(callres.data.errMsg)
-        }
-      } else {
-        window.alert(callres.errMsg)
+    }
+
+    function showPicker() {
+      weui.picker([{
+        label: '法医临床',
+        value: '法医临床'
+      },
+      {
+        label: '法医精神病',
+        value: '法医精神病'
+      },
+      {
+        label: '法医病理',
+        value: '法医病理'
+      },
+      {
+        label: '法医毒物',
+        value: '法医毒物',
+      },
+      {
+        label: '法医物证',
+        value: '法医物证',
+      },
+      {
+        label: '文书痕迹',
+        value: '文书痕迹',
+      },
+      {
+        label: '交通事故痕迹物证',
+        value: '交通事故痕迹物证',
+      },
+      {
+        label: '声像资料',
+        value: '声像资料',
       }
+      ], {
+        defaultValue: ['法医临床'],
+        onConfirm: function (result) {
+          console.log(result)
+          $("#id_tems").val(result)
+        }
+      })
+    }
+
+    async function callServer(path, method = 'GET', data = {}) {
+      try {
+        const callres = await window.app.callContainer({
+          config: {
+            env: 'prod-1gyjb4if1998d9b4', // 微信云托管的环境ID
+          },
+          path: `/api/${path}`, // 填入业务自定义路径和参数，根目录，就是 / 
+          method: method, // 按照自己的业务开发，选择对应的方法
+          header: {
+            'X-WX-SERVICE': 'koa-7zry', // xxx中填入服务名称（微信云托管 - 服务管理 - 服务列表 - 服务名称）
+            "content-type": "application/json"
+          },
+          data: data
+          // 其余参数同 wx.request
+        })
+        console.log(callres)
+        if (callres.data) {
+          if (!callres.data.code) {
+            return callres.data
+          } else if (callres.data.code === 200) {
+            return callres.data.data
+          } else {
+            window.alert(callres.data.errMsg)
+          }
+        } else {
+          window.alert(callres.errMsg)
+        }
+      } catch (e) {
+        console.log(e)
+      }
+    }
+
+    async function getInvoiceList() {
+      let ua = navigator.userAgent.toLowerCase()
+      let url = ''
+      if (ua.indexOf('micromessenger') !== -1) {
+        let isIOS = !!ua.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/)
+        if (isIOS) {
+          url = encodeURIComponent(location.href.split('#')[0])
+        } else {
+          url = location.href.split('#')[0]
+        }
+      }
+      const data = await window.app.getJSSDKSignature({
+        url: url
+      })
+      wx.config({
+        beta: true,//用于方法未对外公开的情况
+        debug: false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来
+        appId: 'wx5c88573f4a89192b', // 必填，公众号的唯一标识
+        timestamp: data.timestamp, // 必填，生成签名的时间戳
+        nonceStr: data.nonceStr, // 必填，生成签名的随机串
+        signature: data.signature,// 必填，签名，见附录1
+        jsApiList: [
+          "chooseInvoiceTitle"
+        ]
+      });
+      wx.ready(function () {
+        doReady();
+      });
+      wx.error(function (res) {
+        console.log(res, '失败！')
+      });
+    }
+    function doReady() {
+      wx.invoke('chooseInvoiceTitle', {
+        "scene": "1"
+      }, async (res) => {
+        var info = JSON.parse(JSON.stringify(res)).choose_invoice_title_info;
+        var infoJ = JSON.parse(JSON.parse(JSON.stringify(info)));
+        let invoice = {
+          title: infoJ.title,
+          tax_number: infoJ.taxNumber,
+          company_address: infoJ.companyAddress,
+          telephone: infoJ.telephone,
+          bank_name: infoJ.bankName,
+          bank_account: infoJ.bankAccount,
+          type: infoJ.type
+        }
+        let resInvoice = await callServer('invoice', 'POST', { invoice })
+        if (resInvoice.id) {
+          window.alert('索要发票成功，发票将稍后发至您填写的邮箱，请注意查收！')
+        } else {
+          window.alert('索要发票失败，请稍后再试')
+        }
+      })
     }
   </script>
 </head>
@@ -177,25 +298,28 @@
                   <input id="name" class="weui-input" placeholder="填写被鉴定对象信息">
                 </div>
               </label>
-              <label for="js_input2" class="weui-cell weui-cell_active">
+              <label for="js_input2" id="id_items_cell"
+                class="weui-cell weui-cell_active weui-cell_select weui-cell_select-after">
                 <div class="weui-cell__hd"><span class="weui-label">鉴定项目</span></div>
                 <div class="weui-cell__bd">
-                  <input id="id_tems" class="weui-input" placeholder="填写鉴定项目">
+                  <div class="weui-select">
+                    <input id="id_tems" class="weui-input" placeholder="请选择鉴定项目" disabled>
+                  </div>
                 </div>
               </label>
-              <label for="js_input2" class="weui-cell weui-cell_active">
+              <label for="js_input3" class="weui-cell weui-cell_active">
                 <div class="weui-cell__hd"><span class="weui-label">邮箱</span></div>
                 <div class="weui-cell__bd">
                   <input id="email" class="weui-input" placeholder="填写邮箱">
                 </div>
               </label>
-              <label for="js_input3" class="weui-cell weui-cell_active">
+              <label for="js_input4" class="weui-cell weui-cell_active">
                 <div class="weui-cell__hd"><span class="weui-label">联系方式</span></div>
                 <div class="weui-cell__bd">
                   <input id="phone" class="weui-input" placeholder="填写联系方式" type="number" pattern="[0-9]*">
                 </div>
               </label>
-              <label for="js_input2" class="weui-cell weui-cell_active">
+              <label for="js_input5" class="weui-cell weui-cell_active">
                 <div class="weui-cell__hd"><span class="weui-label">鉴定人</span></div>
                 <div class="weui-cell__bd">
                   <input id="referee" class="weui-input" placeholder="填写鉴定人">
@@ -211,15 +335,16 @@
     </div>
     <div class="page gallery js_show pay" tabindex="-1" style="display: none;">
       <div class="page__hd">
-        <h1 class="page__title" style="text-align: center;">扫码进行支付</h1>
+        <h3 class="page__title" style="text-align: center;">长按识别扫码支付</h3>
       </div>
       <div>
         <img style="width: 100%;"
-          src="https://7072-prod-1g3ezreeff916953-1311324132.tcb.qcloud.la/WechatIMG15.jpeg?sign=66a4f38ea24f5e7e5aa3c53b7a3d605f&t=1654327290" />
+          src="https://7072-prod-1gyjb4if1998d9b4-1312862016.tcb.qcloud.la/WechatIMG15.jpeg?sign=f5e4f9aa9c0a96080e1e268e031045d6&t=1658386736" />
       </div>
       <div style="text-align: center;">
-        <h4 style="color: #F39753;">付款时务必备注填写的鉴定人信息和电话</h4>
-        <a href="/mine.html">忘记了鉴定信息？点这里查看</a>
+        <h4 style="color: #F39753;">付款时务必备注填写的鉴定对象和电话</h4>
+        <div><a href="/mine.html">忘记了鉴定信息？点这里查看或修改</a></div>
+        <div style="margin-top: 10px;"><a href="javascript:;" id="invoice">我已支付，要开发票？戳这里👈🏻</a></div>
         <div id="finance" style="margin-top: 10px;"></div>
       </div>
     </div>

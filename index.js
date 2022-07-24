@@ -4,7 +4,7 @@ const logger = require("koa-logger");
 const bodyParser = require("koa-bodyparser");
 const fs = require("fs");
 const path = require("path");
-const { init: initDB, User } = require("./db");
+const { init: initDB, User, Invoice } = require("./db");
 const sequelize_1 = require("sequelize")
 
 const router = new Router();
@@ -20,6 +20,57 @@ router.get("/", async (ctx) => {
 router.get("/MP_verify_4PHUAKsyG7gnjDcD.txt", async (ctx) => {
   ctx.body = txtPage;
 });
+
+router.post("/api/invoice", async ctx => {
+  let openid = ''
+  if (ctx.request.headers["x-wx-source"]) {
+    openid = ctx.request.headers["x-wx-openid"]
+  }
+  let currentUser = await User.findOne({ where: { openid } })
+  if (!currentUser || !currentUser.id) {
+    ctx.body = {
+      code: 401,
+      errMsg: '没有权限'
+    }
+  }
+  const { invoice } = ctx.request.body;
+  let data = { user_id: currentUser.id }
+  if (invoice.type) {
+    data.type = invoice.type
+  }
+  if (invoice.title) {
+    data.title = invoice.title
+  }
+  if (invoice.tax_number) {
+    data.tax_number = invoice.tax_number
+  }
+  if (invoice.company_address) {
+    data.company_address = invoice.company_address
+  }
+  if (invoice.telephone) {
+    data.telephone = invoice.telephone
+  }
+  if (invoice.bank_name) {
+    data.bank_name = invoice.bank_name
+  }
+  if (invoice.bank_account) {
+    data.bank_account = invoice.bank_account
+  }
+  let exsitInvoice = await Invoice.findOne({ where: { title: data.title } })
+  if (!exsitInvoice || !exsitInvoice.id) {
+    const result = await Invoice.create(data)
+    ctx.body = {
+      code: 200,
+      data: result
+    }
+  } else {
+    const result = await Invoice.update(data, { where: { id: exsitInvoice.id } })
+    ctx.body = {
+      code: 200,
+      data: result
+    }
+  }
+})
 
 router.post("/api/user", async (ctx) => {
   const { request } = ctx;
@@ -52,27 +103,49 @@ router.post("/api/user", async (ctx) => {
 });
 
 router.put("/api/user/:id", async ctx => {
+  const { request } = ctx;
+  const { id } = ctx.params;
+  const { user } = request.body;
   let openid = ''
   if (ctx.request.headers["x-wx-source"]) {
     openid = ctx.request.headers["x-wx-openid"]
   }
   let currentUser = await User.findOne({ where: { openid } })
-  if (currentUser.role !== 'admin') {
+  if (currentUser.role !== 'admin' && currentUser.id !== id) {
     ctx.body = {
       code: 401,
       errMsg: '没有权限'
     }
   } else {
-    const { request } = ctx;
-    const { id } = ctx.params;
-    const { user } = request.body;
-    if (currentUser.id === id) {
+    if (currentUser.id === id && user.role) {
       ctx.body = {
         code: 400,
-        errMsg: '不能修改自己'
+        errMsg: '不能修改自己的角色'
       }
     } else {
-      let result = await User.update({ role: user.role }, { where: { id } })
+      let date = {}
+      if (user.role) {
+        date.role = user.role
+      }
+      if (user.name) {
+        date.name = user.name
+      }
+      if (user.id_tems) {
+        date.id_tems = user.id_tems
+      }
+      if (user.email) {
+        date.email = user.email
+      }
+      if (user.phone) {
+        date.phone = user.phone
+      }
+      if (user.referee) {
+        date.referee = user.referee
+      }
+      if (user.need_improve !== undefined) {
+        date.need_improve = user.need_improve
+      }
+      let result = await User.update(date, { where: { id } })
       ctx.body = {
         code: 200,
         data: result
@@ -90,7 +163,7 @@ router.get("/api/user/:openid", async (ctx) => {
   };
 });
 
-router.get("/api/userSearch/:text", async (ctx) => {
+router.post("/api/userSearch", async (ctx) => {
   let openid = ''
   if (ctx.request.headers["x-wx-source"]) {
     openid = ctx.request.headers["x-wx-openid"]
@@ -102,18 +175,18 @@ router.get("/api/userSearch/:text", async (ctx) => {
       errMsg: '没有权限'
     }
   } else {
-    const { text } = ctx.params;
+    let { text } = ctx.request.body;
     let excludeFileds = ['openid']
     if (currentUser.role !== 'admin') {
-      excludeFileds.push('role')
+      excludeFileds.push('role', 'need_improve')
     }
     let user = await User.findAll({
       where: {
         [sequelize_1.Op.or]: [
-          { name: { [sequelize_1.Op.like]: `%${text}%` } },
+          { referee: { [sequelize_1.Op.like]: `%${text}%` } },
           { phone: { [sequelize_1.Op.like]: `%${text}%` } }
         ]
-      }, attributes: { exclude: excludeFileds }
+      }, attributes: { exclude: excludeFileds }, include: [{ model: Invoice, limit: 10, order: [['updatedAt', 'DESC']] }], limit: 10, order: [['updatedAt', 'DESC']]
     })
     ctx.body = {
       code: 200,

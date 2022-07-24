@@ -54,6 +54,8 @@
                     $(".infoArea").css("display", "block")
                     $(".noData").css("display", "none")
                     $(".loading").css("display", "none")
+                    submitUpdate(user)
+                    registPicker()
                 } else {
                     $(".infoArea").css("display", "none")
                     $(".noData").css("display", "block")
@@ -64,6 +66,100 @@
                 $(".loading").css("display", "none")
                 $(".noOpenid").css("display", "none")
             }
+        }
+
+        function submitUpdate(oldUser) {
+            $('#js_btn').click(async () => {
+                let user = {
+                    id: oldUser.id,
+                    name: $("#name").val().trim(),
+                    id_tems: $("#id_tems").val().trim(),
+                    email: $("#email").val().trim(),
+                    phone: $("#phone").val().trim(),
+                    referee: $("#referee").val().trim(),
+                    need_improve: false
+                }
+                if (!user.name) {
+                    window.alert('请输入被鉴定对象信息')
+                    return
+                }
+                if (!user.id_tems) {
+                    window.alert('请输入鉴定项目')
+                    return
+                }
+                if (!user.email) {
+                    window.alert('请输入邮箱')
+                    return
+                } else if (!/^\w+@\w+\.\w+$/.test(user.email)) {
+                    window.alert('请输入正确的邮箱')
+                    return
+                }
+                if (!user.phone) {
+                    window.alert('请输入联系方式')
+                    return
+                } else if (!/^1[3456789]\d{9}$/.test(user.phone)) {
+                    window.alert('请输入正确的联系方式')
+                    return
+                }
+                if (!user.referee) {
+                    window.alert('请输入鉴定人')
+                    return
+                }
+                const res = await callServer(`user/${user.id}`, 'put', { user })
+                if (res[0] === 1) {
+                    window.alert('修改成功')
+                } else {
+                    window.alert('修改失败')
+                }
+            })
+        }
+
+        function registPicker() {
+            $("#id_items_cell").on('click', () => {
+                showPicker()
+            })
+        }
+
+        function showPicker() {
+            weui.picker([{
+                label: '法医临床',
+                value: '法医临床'
+            },
+            {
+                label: '法医精神病',
+                value: '法医精神病'
+            },
+            {
+                label: '法医病理',
+                value: '法医病理'
+            },
+            {
+                label: '法医毒物',
+                value: '法医毒物',
+            },
+            {
+                label: '法医物证',
+                value: '法医物证',
+            },
+            {
+                label: '文书痕迹',
+                value: '文书痕迹',
+            },
+            {
+                label: '交通事故痕迹物证',
+                value: '交通事故痕迹物证',
+            },
+            {
+                label: '声像资料',
+                value: '声像资料',
+            }
+            ], {
+                defaultValue: ['法医临床'],
+                onConfirm: function (result) {
+                    console.log(result)
+                    $("#id_tems").val(result)
+                }
+            })
         }
 
         async function callServer(path, method = 'GET', data = {}) {
@@ -98,7 +194,8 @@
         .weui-label {
             width: 120px;
         }
-        button[disabled], html input[disabled] {
+
+        html input {
             text-align: right;
         }
     </style>
@@ -117,36 +214,39 @@
                             <label for="js_input1" class="weui-cell weui-cell_active">
                                 <div class="weui-cell__hd"><span class="weui-label">被鉴定对象信息</span></div>
                                 <div class="weui-cell__bd">
-                                    <input id="name" class="weui-input" placeholder="填写被鉴定对象信息" disabled>
+                                    <input id="name" class="weui-input" placeholder="填写被鉴定对象信息">
                                 </div>
                             </label>
-                            <label for="js_input2" class="weui-cell weui-cell_active">
+                            <label for="js_input2" id="id_items_cell" class="weui-cell weui-cell_active">
                                 <div class="weui-cell__hd"><span class="weui-label">鉴定项目</span></div>
                                 <div class="weui-cell__bd">
-                                    <input id="id_tems" class="weui-input" placeholder="填写鉴定项目" disabled>
-                                </div>
-                            </label>
-                            <label for="js_input2" class="weui-cell weui-cell_active">
-                                <div class="weui-cell__hd"><span class="weui-label">邮箱</span></div>
-                                <div class="weui-cell__bd">
-                                    <input id="email" class="weui-input" placeholder="填写邮箱" disabled>
+                                    <input id="id_tems" class="weui-input" placeholder="请选择鉴定项目" disabled>
                                 </div>
                             </label>
                             <label for="js_input3" class="weui-cell weui-cell_active">
+                                <div class="weui-cell__hd"><span class="weui-label">邮箱</span></div>
+                                <div class="weui-cell__bd">
+                                    <input id="email" class="weui-input" placeholder="填写邮箱">
+                                </div>
+                            </label>
+                            <label for="js_input4" class="weui-cell weui-cell_active">
                                 <div class="weui-cell__hd"><span class="weui-label">联系方式</span></div>
                                 <div class="weui-cell__bd">
                                     <input id="phone" class="weui-input" placeholder="填写联系方式" type="number"
-                                        pattern="[0-9]*" disabled>
+                                        pattern="[0-9]*">
                                 </div>
                             </label>
-                            <label for="js_input2" class="weui-cell weui-cell_active">
+                            <label for="js_input5" class="weui-cell weui-cell_active">
                                 <div class="weui-cell__hd"><span class="weui-label">鉴定人</span></div>
                                 <div class="weui-cell__bd">
-                                    <input id="referee" class="weui-input" placeholder="填写鉴定人" disabled>
+                                    <input id="referee" class="weui-input" placeholder="填写鉴定人">
                                 </div>
                             </label>
                         </div>
                     </div>
+                </div>
+                <div class="weui-bottom-fixed-opr" id="js_opr" style="margin-top: 30px;">
+                    <a href="javascript:;" role="button" class="weui-btn weui-btn_primary" id="js_btn">确定</a>
                 </div>
             </div>
         </div>
